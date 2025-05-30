@@ -22,3 +22,5 @@ print(traj)
 payload = traj.serialize()
 com.send_packet(cmd, payload)
 
+com.send_packet(0x05)
+
