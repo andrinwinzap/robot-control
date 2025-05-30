@@ -1,10 +1,12 @@
 import serial
+import time
 from Trajectory import *
 from SerialParser import *
 from Serialization import *
 
 PORT = '/dev/ttyUSB0'
 BAUD = 115200
+TIMEOUT = 1
 
 PING = 0x01
 HOME = 0x02
@@ -19,15 +21,19 @@ com = SerialProtocol(ser)
 
 def pos():
     com.send_packet(POS)
+    start = time.time()
     while not com.available():
-        pass
+        if time.time() - start > TIMEOUT:
+            return False
     cmd = com.read()
     return read_float_le(cmd.payload)
 
 def ping():
     com.send_packet(PING)
     while not com.available():
-        pass
+        start = time.time()
+        if time.time() - start > TIMEOUT:
+            return False
     cmd = com.read()
     if cmd.cmd == bytes([ACK]):
         return True
@@ -36,8 +42,10 @@ def ping():
     
 def home():
     com.send_packet(PING)
+    start = time.time()
     while not com.available():
-        pass
+        if time.time() - start > TIMEOUT:
+            return False
     cmd = com.read()
     if cmd.cmd == bytes([ACK]):
         return True
@@ -46,8 +54,10 @@ def home():
     
 def load_traj(trajectory: Trajectory):
     com.send_packet(LOAD_TRAJ, trajectory.serialize())
+    start = time.time()
     while not com.available():
-        pass
+        if time.time() - start > TIMEOUT:
+            return False
     cmd = com.read()
     if cmd.cmd == bytes([ACK]):
         return True
@@ -56,8 +66,10 @@ def load_traj(trajectory: Trajectory):
     
 def exec_traj():
     com.send_packet(EXEC_TRAJ)
+    start = time.time()
     while not com.available():
-        pass
+        if time.time() - start > TIMEOUT:
+            return False
     cmd = com.read()
     if cmd.cmd == bytes([ACK]):
         return True
@@ -72,5 +84,5 @@ for i in range(64):
     wps.append(Waypoint(position=i*0.01, velocity=i*0.02, timestamp=i*20))
 trajectory = Trajectory(wps)
 
-load_traj(trajectory)
-exec_traj()
+print(load_traj(trajectory))
+print(exec_traj())
