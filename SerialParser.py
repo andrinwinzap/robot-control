@@ -19,22 +19,21 @@ class SerialParser:
     def __init__(self, dispatch_callback=None):
         self.dispatch_callback = dispatch_callback
         self.parser_state = ParserState.WAIT_START
-        self.payload = []
-        self.length = None
+        self.payload = bytearray()
+        self.length = bytearray(2)  # store length bytes as 2-byte array
         self.length_bytes_read = 0
-        self.cmd = None
-        self.checksum = None
+        self.cmd = None    # will store as bytes([cmd_byte])
+        self.checksum = None  # bytes([checksum_byte])
         self.crc_acc = 0x00
         self.escape_next = False
 
     def parse(self, byte):
-
         if byte == START_BYTE:
             self.reset_parser()
             self.parser_state = ParserState.READ_CMD
             return
         
-        if (self.parser_state != ParserState.WAIT_START):
+        if self.parser_state != ParserState.WAIT_START:
             if self.escape_next:
                 byte ^= ESCAPE_MASK
                 self.escape_next = False
@@ -44,25 +43,27 @@ class SerialParser:
             
         match self.parser_state:
             case ParserState.READ_CMD:
-                self.cmd = byte
+                self.cmd = bytes([byte])
                 self.crc8_acc(byte)
                 self.parser_state = ParserState.READ_LEN
                 
             case ParserState.READ_LEN:
-                if self.length_bytes_read == 0:
-                    self.length = byte
-                    self.length_bytes_read = 1
-                    self.crc8_acc(byte)
+                self.length[self.length_bytes_read] = byte
+                self.crc8_acc(byte)
+                self.length_bytes_read += 1
 
-                else:
-                    self.length |= (byte << 8)
-                    self.crc8_acc(byte)
-                    self.length_bytes_read = 0
-
-                    if self.length > 0 and self.length <= PAYLOAD_BUFFER_SIZE:
-                        self.parser_state = ParserState.READ_PAYLOAD
-                    elif self.length == 0:
-                        self.parser_state = ParserState.READ_CHECKSUM
+                if self.length_bytes_read == 2:
+                    length_val = struct.unpack('<H', self.length)[0]
+                    if 0 <= length_val <= PAYLOAD_BUFFER_SIZE:
+                        self.length_bytes_read = 0
+                        if length_val == 0:
+                            self.length = self.length  # Keep as bytes
+                            self.parser_state = ParserState.READ_CHECKSUM
+                        else:
+                            self.length = self.length  # Keep as bytes
+                            self.payload = bytearray()
+                            self.expected_length = length_val
+                            self.parser_state = ParserState.READ_PAYLOAD
                     else:
                         print("Payload too large")
                         self.reset_parser()
@@ -70,30 +71,34 @@ class SerialParser:
             case ParserState.READ_PAYLOAD:
                 self.crc8_acc(byte)
                 self.payload.append(byte)
-                if len(self.payload) >= self.length:
+                if len(self.payload) >= struct.unpack('<H', self.length)[0]:
                     self.parser_state = ParserState.READ_CHECKSUM
 
             case ParserState.READ_CHECKSUM:
-                self.checksum = byte
+                self.checksum = bytes([byte])
                 self.parser_state = ParserState.WAIT_START
                 self.validate()
 
     def reset_parser(self):
         self.parser_state = ParserState.WAIT_START
-        self.payload = []
-        self.length = 0
+        self.payload = bytearray()
+        self.length = bytearray(2)
+        self.length_bytes_read = 0
+        self.cmd = None
+        self.checksum = None
         self.crc_acc = 0x00
         self.escape_next = False
 
     def validate(self):
-        if self.crc_acc == self.checksum:
+        if self.crc_acc == self.checksum[0]:
             self.dispatch()
         else:
             print("Checksum Failed!")
 
     def dispatch(self):
         if self.dispatch_callback:
-            self.dispatch_callback(self.cmd, self.payload)
+            # Pass cmd and checksum as bytes; payload as bytes as well
+            self.dispatch_callback(self.cmd, bytes(self.payload))
         
     def crc8_acc(self, byte: int):
         self.crc_acc ^= byte
@@ -106,6 +111,12 @@ class SerialProtocol:
         self.serial = serial
         self.parser = SerialParser(dispatch_callback)
 
+    def read_input(self):
+        while self.serial.in_waiting > 0:
+            byte = self.serial.read(1)
+            if byte:
+                self.parser.parse(byte[0])
+                
     def crc8(self, data: bytes) -> int:
         crc: int = 0x00
         for byte in data:
@@ -125,7 +136,7 @@ class SerialProtocol:
                 escaped.append(b)
         return bytes(escaped)
 
-    def send_packet(self, cmd: int, payload: bytes):
+    def send_packet(self, cmd: int, payload: bytes = bytes([])):
         length = struct.pack('<H', len(payload))
         packet = bytes([cmd]) + length + payload
         checksum = self.crc8(packet)

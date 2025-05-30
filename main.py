@@ -1,22 +1,30 @@
 import serial
 from Trajectory import *
 from SerialParser import *
+from Serialization import *
 
 PORT = '/dev/ttyUSB0'
 BAUD = 115200
 
-def generate_test_trajectory(n=50):
-    wps = []
-    for i in range(n):
-        wps.append(Waypoint(position=i*0.01, velocity=i*0.02, timestamp=i*20))
-    return Trajectory(wps)
+PING = 0x01
+HOME = 0x02
+POS  = 0x03
+TRAJ = 0x04
+ACK  = 0xEE
+NACK = 0xFF
 
 ser = serial.Serial(PORT, BAUD, timeout=0.1)
-com = SerialProtocol(ser)
 
-cmd = 0x04
-traj = generate_test_trajectory(63)
-print("Trajectory contents:")
-print(traj)
-payload = traj.serialize()
-com.send_packet(cmd, payload)
+cmds = []
+def callback(cmd, payload):
+    cmds.append((cmd, payload))
+
+def get_pos():
+    com.send_packet(POS)
+    while len(cmds) == 0:
+        com.read_input()
+    print(read_float_le(cmds[0][1]))
+
+com = SerialProtocol(ser, callback)
+
+get_pos()
