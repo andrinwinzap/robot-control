@@ -4,7 +4,7 @@ from Trajectory import *
 from SerialParser import *
 from Serialization import *
 
-PORT = '/dev/ttyUSB1'
+PORT = '/dev/ttyUSB2'
 BAUD = 115200
 TIMEOUT = 1
 
@@ -24,11 +24,22 @@ class StatusByte:
     HOMING = 0x02
     EXECUTING_TRAJ = 0x03
 
+class AddressByte:
+    BROADCAST = 0x00
+    MASTER = 0x01
+    ACTUATOR_1 = 0x02
+    ACTUATOR_2 = 0x03
+    ACTUATOR_3 = 0x04
+    ACTUATOR_4 = 0x05
+    ACTUATOR_5 = 0x06
+    ACTUATOR_6 = 0x07
+    TOOL = 0x08
+
 ser = serial.Serial(PORT, BAUD, timeout=0.1)
 com = SerialProtocol(ser)
 
 def pos():
-    com.send_packet(CommandByte.POS)
+    com.send_packet(AddressByte.ACTUATOR_1, CommandByte.POS)
     start = time.time()
     while True:
         if time.time() - start > TIMEOUT:
@@ -40,7 +51,7 @@ def pos():
     return read_float_le(cmd.payload)
 
 def ping():
-    com.send_packet(CommandByte.PING)
+    com.send_packet(AddressByte.ACTUATOR_1, CommandByte.PING)
     while not com.available():
         start = time.time()
         if time.time() - start > TIMEOUT:
@@ -52,7 +63,7 @@ def ping():
         return False
     
 def home():
-    com.send_packet(CommandByte.HOME)
+    com.send_packet(AddressByte.ACTUATOR_1, CommandByte.HOME)
     start = time.time()
     while not com.available():
         if time.time() - start > TIMEOUT:
@@ -63,7 +74,7 @@ def home():
         return False
     print("ACKED")
     while True:
-        com.send_packet(CommandByte.STATUS)
+        com.send_packet(AddressByte.ACTUATOR_1, CommandByte.STATUS)
         start = time.time()
         while not com.available():
             if time.time() - start > TIMEOUT:
@@ -75,7 +86,7 @@ def home():
     
     
 def load_traj(trajectory: Trajectory):
-    com.send_packet(CommandByte.LOAD_TRAJ, trajectory.serialize())
+    com.send_packet(AddressByte.ACTUATOR_1, CommandByte.LOAD_TRAJ, trajectory.serialize())
     start = time.time()
     while not com.available():
         if time.time() - start > TIMEOUT:
@@ -87,7 +98,7 @@ def load_traj(trajectory: Trajectory):
         return False
     
 def exec_traj():
-    com.send_packet(CommandByte.EXEC_TRAJ)
+    com.send_packet(AddressByte.ACTUATOR_1, CommandByte.EXEC_TRAJ)
     start = time.time()
     while not com.available():
         if time.time() - start > TIMEOUT:
@@ -98,7 +109,7 @@ def exec_traj():
         return False
     print("ACKED")
     while True:
-        com.send_packet(CommandByte.STATUS)
+        com.send_packet(AddressByte.ACTUATOR_1, CommandByte.STATUS)
         start = time.time()
         while not com.available():
             if time.time() - start > TIMEOUT:

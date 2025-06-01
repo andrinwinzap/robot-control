@@ -133,9 +133,9 @@ class SerialProtocol:
     def read(self):
         return self._parser.read()
     
-    def send_packet(self, cmd: int, payload: bytes = bytes([])):
+    def send_packet(self, addr: int, cmd: int, payload: bytes = bytes([])):
         length = struct.pack('<H', len(payload))
-        packet = bytes([cmd]) + length + payload
+        packet = bytes([addr]) + bytes([cmd]) + length + payload
         checksum = self._crc8(packet)
         packet = packet + bytes([checksum])
         packet = self._escape_packet(packet)
