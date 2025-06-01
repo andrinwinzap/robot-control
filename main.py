@@ -8,35 +8,6 @@ PORT = '/dev/ttyUSB1'
 BAUD = 115200
 TIMEOUT = 1
 
-class Bytes:
-    class Command:
-        PING = 0x01
-        HOME = 0x02
-        POS  = 0x03
-        LOAD_TRAJ = 0x04
-        EXEC_TRAJ = 0x05
-        FINISHED = 0x06
-        STATUS = 0x07
-        ACK  = 0xEE
-        NACK = 0xFF
-
-    class Status:
-        IDLE = 0x01
-        HOMING = 0x02
-        EXECUTING_TRAJ = 0x03
-
-    class Address:
-        BROADCAST = 0x00
-        MASTER = 0x01
-        ACTUATOR_1 = 0x02
-        ACTUATOR_2 = 0x03
-        ACTUATOR_3 = 0x04
-        ACTUATOR_4 = 0x05
-        ACTUATOR_5 = 0x06
-        ACTUATOR_6 = 0x07
-        TOOL = 0x08
-
-
 ser = serial.Serial(PORT, BAUD, timeout=0.1)
 com = SerialProtocol(ser, Bytes.Address.MASTER)
 

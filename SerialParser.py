@@ -2,13 +2,43 @@ from enum import Enum, auto
 import struct
 from collections import deque
 
-START_BYTE = 0xAA
-ESCAPE_BYTE = 0xAB
-ESCAPE_MASK = 0x20
-
 PAYLOAD_BUFFER_SIZE = 1024
 MAX_PACKET_BUFFER_SIZE = PAYLOAD_BUFFER_SIZE + 4
 CMD_QUEUE_SIZE = 8
+
+class Bytes:
+    class Protocol:
+        START = 0xAA
+        ESCAPE = 0xAB
+        ESCAPE_MASK = 0x20
+        CRC8_POLY = 0x07
+        
+    class Command:
+        PING = 0x01
+        HOME = 0x02
+        POS  = 0x03
+        LOAD_TRAJ = 0x04
+        EXEC_TRAJ = 0x05
+        FINISHED = 0x06
+        STATUS = 0x07
+        ACK  = 0xEE
+        NACK = 0xFF
+
+    class Status:
+        IDLE = 0x01
+        HOMING = 0x02
+        EXECUTING_TRAJECTORY = 0x03
+
+    class Address:
+        BROADCAST = 0x00
+        MASTER = 0x01
+        ACTUATOR_1 = 0x02
+        ACTUATOR_2 = 0x03
+        ACTUATOR_3 = 0x04
+        ACTUATOR_4 = 0x05
+        ACTUATOR_5 = 0x06
+        ACTUATOR_6 = 0x07
+        TOOL = 0x08
 
 class ParserState(Enum):
     WAIT_START = auto()
@@ -38,16 +68,16 @@ class SerialParser:
         self._queue = deque(maxlen=CMD_QUEUE_SIZE)
 
     def parse(self, byte):
-        if byte == START_BYTE:
+        if byte == Bytes.Protocol.START:
             self._reset()
             self._state = ParserState.READ_CMD
             return
         
         if self._state != ParserState.WAIT_START:
             if self._escape_next:
-                byte ^= ESCAPE_MASK
+                byte ^= Bytes.Protocol.ESCAPE_MASK
                 self._escape_next = False
-            elif byte == ESCAPE_BYTE:
+            elif byte == Bytes.Protocol.ESCAPE:
                 self._escape_next = True
                 return
             
@@ -149,7 +179,7 @@ class SerialProtocol:
         checksum = self._crc8(packet)
         packet = packet + bytes([checksum])
         packet = self._escape_packet(packet)
-        packet = bytes([START_BYTE]) + packet
+        packet = bytes([Bytes.Protocol.START]) + packet
         self._serial.write(packet)
 
     def _read_serial(self):
@@ -170,9 +200,9 @@ class SerialProtocol:
     def _escape_packet(self, data: bytes) -> bytes:
         escaped = bytearray()
         for b in data:
-            if b == START_BYTE or b == ESCAPE_BYTE:
-                escaped.append(ESCAPE_BYTE)
-                escaped.append(b ^ ESCAPE_MASK)
+            if b == Bytes.Protocol.START or b == Bytes.Protocol.ESCAPE:
+                escaped.append(Bytes.Protocol.ESCAPE)
+                escaped.append(b ^ Bytes.Protocol.ESCAPE_MASK)
             else:
                 escaped.append(b)
         return bytes(escaped)
