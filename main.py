@@ -1,7 +1,7 @@
 import serial
 import time
 from Trajectory import *
-from SerialParser import *
+from SerialProtocol import *
 from Serialization import *
 
 PORT = '/dev/ttyUSB1'
