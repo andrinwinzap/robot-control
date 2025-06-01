@@ -38,7 +38,7 @@ class Bytes:
 
 
 ser = serial.Serial(PORT, BAUD, timeout=0.1)
-com = SerialProtocol(ser)
+com = SerialProtocol(ser, Bytes.Address.MASTER)
 
 def pos():
     com.send_packet(Bytes.Address.ACTUATOR_1, Bytes.Command.POS)

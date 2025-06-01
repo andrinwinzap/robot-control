@@ -12,6 +12,7 @@ CMD_QUEUE_SIZE = 8
 
 class ParserState(Enum):
     WAIT_START = auto()
+    READ_ADDR = auto()
     READ_CMD = auto()
     READ_LEN = auto()
     READ_PAYLOAD = auto()
@@ -23,7 +24,7 @@ class Command:
         self.payload = payload
 
 class SerialParser:
-    def __init__(self):
+    def __init__(self, address):
         self._state = ParserState.WAIT_START
         self._payload = bytearray()
         self._length = bytearray(2)
@@ -32,6 +33,7 @@ class SerialParser:
         self._checksum = None
         self._crc_acc = 0x00
         self._escape_next = False
+        self._address = address
 
         self._queue = deque(maxlen=CMD_QUEUE_SIZE)
 
@@ -50,6 +52,13 @@ class SerialParser:
                 return
             
         match self._state:
+            case ParserState.READ_ADDR:
+                self._crc8_acc(byte)
+                if (byte == self._address):
+                    self._state = ParserState.READ_CMD
+                else:
+                    self._reset()
+
             case ParserState.READ_CMD:
                 self._cmd = bytes([byte])
                 self._crc8_acc(byte)
@@ -122,9 +131,10 @@ class SerialParser:
             self._crc_acc &= 0xFF
 
 class SerialProtocol:
-    def __init__(self, serial):
+    def __init__(self, serial, address):
         self._serial = serial
-        self._parser = SerialParser()
+        self._parser = SerialParser(address)
+        self._address = address
 
     def available(self):
         self._read_serial()
