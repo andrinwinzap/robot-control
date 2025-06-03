@@ -34,6 +34,18 @@ def ping():
         return True
     else:
         return False
+
+def estop():
+    com.send_packet(Bytes.Address.ACTUATOR_1, Bytes.Command.ESTOP)
+    while not com.available():
+        start = time.time()
+        if time.time() - start > TIMEOUT:
+            return False
+    cmd = com.read()
+    if cmd.cmd == bytes([Bytes.Command.ACK]):
+        return True
+    else:
+        return False
     
 def home():
     com.send_packet(Bytes.Address.ACTUATOR_1, Bytes.Command.HOME)
@@ -81,20 +93,24 @@ def exec_traj():
         print("ACK not received")
         return False
     print("ACKED")
-    while True:
-        com.send_packet(Bytes.Address.ACTUATOR_1, Bytes.Command.STATUS)
-        start = time.time()
-        while not com.available():
-            if time.time() - start > TIMEOUT:
-                return False
-        cmd = com.read()
-        if cmd.cmd == bytes([Bytes.Command.STATUS]):
-            print(cmd.payload[0])
-            if cmd.payload[0] == Bytes.Status.IDLE:
-                return True
+    # while True:
+    #     com.send_packet(Bytes.Address.ACTUATOR_1, Bytes.Command.STATUS)
+    #     start = time.time()
+    #     while not com.available():
+    #         if time.time() - start > TIMEOUT:
+    #             return False
+    #     cmd = com.read()
+    #     if cmd.cmd == bytes([Bytes.Command.STATUS]):
+    #         print(cmd.payload[0])
+    #         if cmd.payload[0] == Bytes.Status.IDLE:
+    #             return True
     
-print(home())
+print(pos())
 wps = [Waypoint(0, 0, 0), Waypoint(3.14/2, 0, 5000), Waypoint(0, 0, 10000)]
 traj = Trajectory(wps)
 print(load_traj(traj))
 print(exec_traj())
+
+time.sleep(1)
+
+print(estop())

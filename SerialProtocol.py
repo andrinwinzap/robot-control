@@ -21,6 +21,7 @@ class Bytes:
         EXEC_TRAJ = 0x05
         FINISHED = 0x06
         STATUS = 0x07
+        ESTOP = 0x08
         ACK  = 0xEE
         NACK = 0xFF
 
