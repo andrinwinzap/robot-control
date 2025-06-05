@@ -162,13 +162,12 @@ class SerialParser:
             self._crc_acc &= 0xFF
 
 class SerialProtocol:
-    def __init__(self, serial, address):
-        self._serial = serial
+    def __init__(self, address, write_callback):
         self._parser = SerialParser(address)
         self._address = address
+        self.write_callback = write_callback
 
     def available(self):
-        self._read_serial()
         return self._parser.available()
     
     def read(self):
@@ -181,13 +180,10 @@ class SerialProtocol:
         packet = packet + bytes([checksum])
         packet = self._escape_packet(packet)
         packet = bytes([Bytes.Protocol.START]) + packet
-        self._serial.write(packet)
+        self.write_callback(packet)
 
-    def _read_serial(self):
-        while self._serial.in_waiting > 0:
-            byte = self._serial.read(1)
-            if byte:
-                self._parser.parse(byte[0])
+    def feed(self, byte):
+        self._parser.parse(byte)
                 
     def _crc8(self, data: bytes) -> int:
         crc: int = 0x00
