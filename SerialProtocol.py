@@ -71,7 +71,7 @@ class SerialParser:
     def parse(self, byte):
         if byte == Bytes.Protocol.START:
             self._reset()
-            self._state = ParserState.READ_CMD
+            self._state = ParserState.READ_ADDR
             return
         
         if self._state != ParserState.WAIT_START:
