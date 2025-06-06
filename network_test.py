@@ -11,7 +11,7 @@ TIMEOUT = 2          # Timeout in seconds
 
 # Create and connect the TCP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(0.1)  # Non-blocking recv with short timeout
+sock.settimeout(1)  # Non-blocking recv with short timeout
 sock.connect((ESP_IP, ESP_PORT))
 
 # Write callback for SerialProtocol
