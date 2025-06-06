@@ -92,7 +92,7 @@ def home():
                     return True
         return False
 
-def load_traj(trajectory: Trajectory):
+def load_traj(trajectory: ActuatorTrajectory):
     com.send_packet(Bytes.Address.MASTER, Bytes.Command.LOAD_TRAJ, trajectory.serialize())
     start = time.time()
     while time.time() - start < TIMEOUT:
@@ -117,8 +117,9 @@ def exec_traj():
 
 # Example usage
 if __name__ == '__main__':
+    print("Position:", ping())
     print("Position:", pos())
     wps = [Waypoint(0, 0, 0), Waypoint(3.14/2, 0, 5000), Waypoint(0, 0, 10000)]
-    traj = Trajectory(wps)
+    traj = ActuatorTrajectory(wps)
     print("Loaded:", load_traj(traj))
     print("Executed:", exec_traj())

@@ -12,7 +12,7 @@ class Waypoint:
     def __repr__(self):
         return f"Waypoint(position={self.position}, velocity={self.velocity}, timestamp={self.timestamp})"
 
-class Trajectory:
+class ActuatorTrajectory:
     def __init__(self, waypoints: List[Waypoint] = []):
         self.waypoints = waypoints
 
@@ -43,5 +43,5 @@ class Trajectory:
 
 if __name__ == "__main__":
     wps = [Waypoint(1,2,3),Waypoint(1,3,3), Waypoint(1,2,3), Waypoint(1,2,3), Waypoint(1,2,3), Waypoint(1,2,3)]
-    traj = Trajectory(wps)
+    traj = ActuatorTrajectory(wps)
     print(traj.serialize())
