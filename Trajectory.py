@@ -1,5 +1,6 @@
 import struct
 from typing import List
+from Serialization import *
 
 MAX_WAYPOINTS = 64
 
@@ -16,25 +17,17 @@ class ActuatorTrajectory:
     def __init__(self, waypoints: List[Waypoint] = []):
         self.waypoints = waypoints
 
-    @staticmethod
-    def write_float_le(value: float) -> bytes:
-        return struct.pack('<f', value)
-        
-    @staticmethod
-    def write_uint32_le(value: int) -> bytes:
-        return struct.pack('<I', value)
-
     def serialize(self) -> bytes:
         total_bytes = 1 + len(self.waypoints) * 12
         out_buffer = bytearray(total_bytes)
         out_buffer[0] = len(self.waypoints)
         idx = 1
         for wp in self.waypoints:
-            out_buffer[idx:idx+4] = self.write_float_le(wp.position)
+            out_buffer[idx:idx+4] = write_float_le(wp.position)
             idx += 4
-            out_buffer[idx:idx+4] = self.write_float_le(wp.velocity)
+            out_buffer[idx:idx+4] = write_float_le(wp.velocity)
             idx += 4
-            out_buffer[idx:idx+4] = self.write_uint32_le(wp.timestamp)
+            out_buffer[idx:idx+4] = write_uint32_le(wp.timestamp)
             idx += 4
         return bytes(out_buffer)
     
