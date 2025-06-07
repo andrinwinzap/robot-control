@@ -57,12 +57,12 @@ class ActuatorTrajectory:
 
 class RobotTrajectory:
     def __init__(self,
-                 actuator_1: ActuatorTrajectory,
-                 actuator_2: ActuatorTrajectory,
-                 actuator_3: ActuatorTrajectory,
-                 actuator_4: ActuatorTrajectory,
-                 actuator_5: ActuatorTrajectory,
-                 actuator_6: ActuatorTrajectory
+                 actuator_1: ActuatorTrajectory = ActuatorTrajectory(),
+                 actuator_2: ActuatorTrajectory = ActuatorTrajectory(),
+                 actuator_3: ActuatorTrajectory = ActuatorTrajectory(),
+                 actuator_4: ActuatorTrajectory = ActuatorTrajectory(),
+                 actuator_5: ActuatorTrajectory = ActuatorTrajectory(),
+                 actuator_6: ActuatorTrajectory = ActuatorTrajectory()
                  ):
         self.actuator_1 = actuator_1
         self.actuator_2 = actuator_2
