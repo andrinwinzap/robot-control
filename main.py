@@ -27,7 +27,9 @@ actuator_4_trajectory = ActuatorTrajectory([
                                 ])
 
 trajectory = RobotTrajectory(actuator_1_trajectory,actuator_2_trajectory,actuator_3_trajectory,actuator_4_trajectory)
-print("Ping:", robot.ping())
-print("Position:", robot.pos())
-print("Trajectory loaded:", robot.load_traj(trajectory))
-print("Trajectory executed:", robot.exec_traj())
+
+robot.ping()
+position = robot.pos()
+print("Position:", position)
+robot.load_traj(trajectory)
+robot.exec_traj()
