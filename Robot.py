@@ -20,7 +20,7 @@ class Robot:
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.settimeout(self.tcp_timeout)
         self._sock.connect((self.ip, self.port))
-        self._master_com = SerialProtocol(Bytes.Address.MASTER, self._write_callback)
+        self._master_com = SerialProtocol(self._write_callback)
 
     def _write_callback(self, packet) -> None:
         self._sock.sendall(packet)

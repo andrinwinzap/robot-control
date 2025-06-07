@@ -55,7 +55,7 @@ class Command:
         self.payload = payload
 
 class SerialParser:
-    def __init__(self, address):
+    def __init__(self, address = None):
         self._state = ParserState.WAIT_START
         self._payload = bytearray()
         self._length = bytearray(2)
@@ -85,7 +85,7 @@ class SerialParser:
         match self._state:
             case ParserState.READ_ADDR:
                 self._crc8_acc(byte)
-                if (byte == self._address):
+                if (byte == self._address or byte == Bytes.Address.BROADCAST):
                     self._state = ParserState.READ_CMD
                 else:
                     self._reset()
@@ -162,7 +162,7 @@ class SerialParser:
             self._crc_acc &= 0xFF
 
 class SerialProtocol:
-    def __init__(self, address, write_callback):
+    def __init__(self, write_callback, address = None):
         self._parser = SerialParser(address)
         self._address = address
         self.write_callback = write_callback
