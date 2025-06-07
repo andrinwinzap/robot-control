@@ -11,7 +11,7 @@ class NackResponse(BaseException):
     pass
 
 class Robot:
-    def __init__(self, ip, port, tcp_timeout=1, protocol_timeout=1):
+    def __init__(self, ip, port, tcp_timeout=1, protocol_timeout=2):
         self.ip = ip
         self.port = port
         self.tcp_timeout = tcp_timeout
