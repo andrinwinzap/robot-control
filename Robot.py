@@ -51,22 +51,22 @@ class Robot:
         self._wait_for_packet(Bytes.Command.ACK)
 
     def pos(self) -> RobotPosition:
-        self._master_com.send_packet(Bytes.Address.MASTER, Bytes.Command.POS)
+        self._master_com.send_packet(Bytes.Command.POS)
         packet = self._wait_for_packet(Bytes.Command.POS)
         return RobotPosition.from_bytes(packet.payload)
     
     def ping(self) -> None:
-        self._master_com.send_packet(Bytes.Address.MASTER, Bytes.Command.PING)
+        self._master_com.send_packet(Bytes.Command.PING)
         self._wait_for_ack()
     
     def estop(self) -> None:
-        self._master_com.send_packet(Bytes.Address.MASTER, Bytes.Command.ESTOP)
+        self._master_com.send_packet(Bytes.Command.ESTOP)
         self._wait_for_ack()
     
     def load_traj(self, trajectory: ActuatorTrajectory) -> None:
-        self._master_com.send_packet(Bytes.Address.MASTER, Bytes.Command.LOAD_TRAJ, trajectory.serialize())
+        self._master_com.send_packet(Bytes.Command.LOAD_TRAJ, trajectory.serialize())
         self._wait_for_ack()
 
     def exec_traj(self) -> None:
-        self._master_com.send_packet(Bytes.Address.MASTER, Bytes.Command.EXEC_TRAJ)
+        self._master_com.send_packet(Bytes.Command.EXEC_TRAJ)
         self._wait_for_ack()

@@ -173,7 +173,7 @@ class SerialProtocol:
     def read(self):
         return self._parser.read()
     
-    def send_packet(self, addr: int, cmd: int, payload: bytes = bytes([])):
+    def send_packet(self, cmd: int, payload: bytes = bytes([]), addr: int = Bytes.Address.BROADCAST):
         length = struct.pack('<H', len(payload))
         packet = bytes([addr]) + bytes([cmd]) + length + payload
         checksum = self._crc8(packet)
